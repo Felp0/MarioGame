@@ -42,7 +42,7 @@ int main(int argc, char* args[])
 			Render();
 			quit = Update();
 		}
-	}
+	} 
 	
 
 	CloseSDL();
