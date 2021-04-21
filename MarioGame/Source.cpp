@@ -4,7 +4,6 @@
 #include "constants.h"
 #include "Texture2D.h"
 #include "GameScreenManager.h"
-#include "Commons.h"
 #include <iostream>
 
 using namespace std;
@@ -157,7 +156,7 @@ bool Update()
 		break;
 
 	}
-	game_screen_manager->Update((float)(new_time - g_old_time) / 1000.0f, e);
+	game_screen_manager->Update((float)(new_time - g_old_time)/ 25.f, e);
 
 	g_old_time = new_time;
 

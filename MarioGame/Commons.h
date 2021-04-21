@@ -29,3 +29,21 @@ struct Vector2D
 
 
 };
+
+struct Rect2D
+{
+	float x;
+	float y;
+	float widht;
+	float height;
+
+	Rect2D(float x_pos, float y_pos, float widht, float height)
+	{
+		x = x_pos;
+		y = y_pos;
+		this->widht = widht;
+		this->height = height;
+
+	}
+
+};

@@ -1,18 +1,14 @@
 #include "Character.h"
-#include "Texture2D.h"
+#include "constants.h"
 
-Character::Character(SDL_Renderer* renderer, string imagePath, Vector2D start_position)
+Character::Character(SDL_Renderer* renderer, string imagePath, Vector2D start_position,LevelMap* map)
 {
     m_facing_direction = FACING_RIGHT;
-
-	m_moving_left = false;
-	m_moving_right = false;
-
-	move_speed = 1.0f;
-
-
 	m_renderer = renderer;
 	m_position = start_position; 
+    m_current_levelmap = map;
+
+    m_collision_radius = 15.0f;
 
 	m_texture = new Texture2D(m_renderer);
 	if (!m_texture->LoadFromFile(imagePath))
@@ -32,12 +28,104 @@ Character::~Character()
 	m_renderer = nullptr;
 }
 
+
+void Character::Update(float deltaTime, SDL_Event e)
+{
+    //collision position variables
+    int centralX_position = (int)(m_position.x + (m_texture->GetWidth() * 0.5)) / TILE_WIDHT;
+    int foot_position = (int)(m_position.y + m_texture->GetHeight()) / TILE_HEIGHT;
+    //deal with gravity
+    if (m_current_levelmap->GetTileAt(foot_position, centralX_position) == 0)
+    {
+        AddGravity(deltaTime);
+    }
+    else
+    {
+        m_can_jump = true;
+    }
+
+    if (m_jumping)
+    {
+        //adjust position
+        m_position.y -= m_jump_force * deltaTime;
+
+        //reduce ump force
+        m_jump_force -=  deltaTime * JUMP_FORCE_DECREMENT;
+
+        //is jump force 0 ?
+        if (m_jump_force <= 0.0f)
+            m_jumping = false;
+
+        Jump();
+        
+    }
+    
+    
+    //movement
+    if (m_moving_left)
+    {
+        MovingLeft(deltaTime);
+    }
+    else if (m_moving_right)
+    {
+        MovingRight(deltaTime);
+    }
+
+        
+
+
+   
+ } 
+Vector2D Character::GetPosition()
+{
+	return m_position;
+}
+
+void Character::MovingLeft(float deltaTime)
+{
+    m_facing_direction = FACING_LEFT;
+    m_position.x -= deltaTime * MOVEMENTSPEED;
+}
+
+
+
+void Character::MovingRight(float deltaTime)
+{
+    m_facing_direction = FACING_RIGHT;
+    m_position.x += deltaTime * MOVEMENTSPEED;
+}
+
+void Character::AddGravity(float deltaTime)
+{
+    if (m_position.y + 64 <= SCREEN_HEIGHT)
+    {
+        m_position.y += deltaTime * GRAVITY;
+    }
+    else
+    {
+        m_can_jump = true;
+    }
+   
+       
+    
+}
+
+void Character::Jump()
+{
+    if (!m_jumping)
+    {
+        m_jump_force = INITIAL_JUMP_FORCE;
+        m_jumping = true;
+        m_can_jump = false;
+    }
+}
+
 void Character::Render()
 {
     if (m_facing_direction == FACING_RIGHT)
     {
 
-        m_texture->Render(m_position, SDL_FLIP_NONE); 
+        m_texture->Render(m_position, SDL_FLIP_NONE);
 
     }
 
@@ -48,95 +136,8 @@ void Character::Render()
 
     }
 }
-void Character::Update(float deltaTime, SDL_Event e)
+
+float Character::GetCollisionRadius()
 {
-    if (m_moving_left)
-    {
-
-        MovingLeft(deltaTime);
-
-    }
-
-    else if (m_moving_right)
-    {
-
-        MovingRight(deltaTime);
-
-    }
-
-   
-
-    switch (e.type)
-    {
-    case SDL_KEYUP:
-        switch (e.key.keysym.sym)
-        {
-        case SDLK_d:
-            //m_moving_right = false;
-            break;
-
-
-
-        case SDLK_a:
-           // m_moving_left = false;
-         
-            break;
-
-
-        default:
-            break;
-        }
-        break;
-
-          
-
-
-    case SDL_KEYDOWN:
-        switch (e.key.keysym.sym)
-        {
-
-        case SDLK_d:
-            m_facing_direction = FACING_RIGHT;
-            cout << " " << m_position.x << endl;
-           // m_position.x += move_speed;
-            m_moving_right = true;
-            m_moving_left = false;
-
-            break;
-
-        case SDLK_a:
-            m_facing_direction = FACING_LEFT;
-            cout << " " << m_position.x << endl;
-           // m_position.x -= move_speed;
-            m_moving_left = true; 
-            m_moving_right = false;
-
-            break;
-
-        default:
-
-            break;
-
-        }
-
-        break;
-
-    }
-   
- } 
-Vector2D Character::GetPosition()
-{
-	return m_position;
-}
-
-void Character::MovingLeft(float deltaTime)
-{
-    m_position.x -= move_speed;
-}
-
-
-
-void Character::MovingRight(float deltaTime)
-{
-    m_position.x += move_speed;
+    return m_collision_radius;
 }
